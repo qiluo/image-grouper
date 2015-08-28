@@ -18,8 +18,8 @@ Options:
   --move            move images instead of copying, source will be deleted,
                     use it by caution [default: False]
   --exifonly        read exif only [default: False]
-  -f <format>       date format
-  -d               show debugging info
+  -f <format>       output dir name format, specify month for yyyy-mm or day for yyyy-mm-dd [default: month]
+  -d                show debugging info
 
 """
 from docopt import docopt
@@ -71,8 +71,9 @@ def calcOutputDirPath(imageFilePath, isExifOnly, outputParentDir):
     else:
         dt = None
 
-    # %Y-%m-%d
-    targetDirName = time.strftime('%Y-%m', time.localtime(dt)) if dt else None
+    # %Y-%m by default
+    dateFormat = '%Y-%m-%d' if args['-f'] == 'day' else '%Y-%m'
+    targetDirName = time.strftime(dateFormat, time.localtime(dt)) if dt else None
     return os.sep.join([outputParentDir, targetDirName])
 
 if __name__ == '__main__':

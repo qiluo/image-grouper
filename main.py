@@ -24,11 +24,14 @@ Options:
 """
 from docopt import docopt
 import os
+import time
 from logger import Logger
 import exifread
 
 # what tags use to redate file (use first found)
 DT_TAGS = ["Image DateTime", "EXIF DateTimeOriginal", "DateTime"]
+VALID_IMAGE_TYPE = ['.jpg', '.JPG']
+
 
 def readExifDate(image_path):
     """read date from exif, return in format of ('2005:10:20 23:22:28'),
@@ -43,29 +46,56 @@ def readExifDate(image_path):
             except:
                 continue
 
-        if dt_value:
-            return dt_value
+            if dt_value:
+                return exif_info2time(dt_value)
     finally:
         f.close()
 
     return None
 
 
-def handleImageByDate(imagePath, date, shouldMove, outputDir):
-    pass
+def exif_info2time(ts):
+    """changes EXIF date ('2005:10:20 23:22:28') to number of seconds since 1970-01-01"""
+    tpl = time.strptime(ts + 'UTC', '%Y:%m:%d %H:%M:%S%Z')
+    return time.mktime(tpl)
+
+
+def calcOutputDirPath(imageFilePath, isExifOnly, outputParentDir):
+    date = readExifDate(imageFilePath)
+    if date:
+        dt = date
+    elif not isExifOnly:
+        logger.info('using file last modified time')
+        dt = os.path.getmtime(imageFilePath)
+    else:
+        dt = None
+
+    # %Y-%m-%d
+    targetDirName = time.strftime('%Y-%m', time.localtime(dt)) if dt else None
+    return os.sep.join([outputParentDir, targetDirName])
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='0.0.1')
     logger = Logger(args['-d'])
     logger.info(args)
 
-    images = []
     for (dirpath, dirnames, filenames) in os.walk(os.path.abspath(args['<source_dir>'])):
         for filename in filenames:
-            logger.info(os.sep.join([dirpath, filename]))
-            images.extend(os.sep.join([dirpath, filename]))
-            date = readExifDate(os.sep.join([dirpath, filename]))
-            logger.info(date)
+            for ext in VALID_IMAGE_TYPE:
+                if filename.endswith(ext):
+                    filepath = os.sep.join([dirpath, filename])
+                    logger.info(filepath)
+                    targetDirName = calcOutputDirPath(filepath, args[
+                                                      '--exifonly'], os.path.abspath(args['-o']) if args['-o'] else os.path.abspath(args['<source_dir>']))
+                    logger.info('output dir name is %s' % targetDirName)
+                    if not args['--move']:
+                        logger.info('coping image from %s to %s' %
+                                    (filepath, targetDirName))
+                    else:
+                        logger.info('moving image from %s to %s' %
+                                    (filepath, targetDirName))
+
+                    break
 
         # no recurse, just top level dir
         if not args['-r']:

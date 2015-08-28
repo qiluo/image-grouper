@@ -25,6 +25,7 @@ Options:
 from docopt import docopt
 import os
 import time
+import shutil
 from logger import Logger
 import exifread
 
@@ -88,12 +89,23 @@ if __name__ == '__main__':
                     targetDirName = calcOutputDirPath(filepath, args[
                                                       '--exifonly'], os.path.abspath(args['-o']) if args['-o'] else os.path.abspath(args['<source_dir>']))
                     logger.info('output dir name is %s' % targetDirName)
-                    if not args['--move']:
-                        logger.info('coping image from %s to %s' %
-                                    (filepath, targetDirName))
-                    else:
-                        logger.info('moving image from %s to %s' %
-                                    (filepath, targetDirName))
+                    try:
+                        os.makedirs(targetDirName)
+                    except:
+                        pass
+
+                    try:
+                        if not args['--move']:
+                            logger.info('coping image from %s to %s' %
+                                        (filepath, targetDirName))
+                            shutil.copy2(filepath, targetDirName)
+                        else:
+                            logger.info('moving image from %s to %s' %
+                                        (filepath, targetDirName))
+                            shutil.move(filepath, targetDirName)
+                    except:
+                        logger.error('failed to copy/move %s' % filepath)
+                        pass
 
                     break
 

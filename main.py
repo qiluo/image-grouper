@@ -31,7 +31,6 @@ import exifread
 
 # what tags use to redate file (use first found)
 DT_TAGS = ["Image DateTime", "EXIF DateTimeOriginal", "DateTime"]
-VALID_IMAGE_TYPE = ['.jpg', '.JPG']
 
 
 def readExifDate(image_path):
@@ -85,32 +84,28 @@ if __name__ == '__main__':
 
     for (dirpath, dirnames, filenames) in os.walk(os.path.abspath(args['<source_dir>'])):
         for filename in filenames:
-            for ext in VALID_IMAGE_TYPE:
-                if filename.endswith(ext):
-                    filepath = os.sep.join([dirpath, filename])
-                    logger.info(filepath)
-                    targetDirName = calcOutputDirPath(filepath, args[
-                                                      '--exifonly'], os.path.abspath(args['-o']) if args['-o'] else os.path.abspath(args['<source_dir>']))
-                    logger.info('output dir name is %s' % targetDirName)
-                    try:
-                        os.makedirs(targetDirName)
-                    except:
-                        pass
+            filepath = os.sep.join([dirpath, filename])
+            logger.info(filepath)
+            targetDirName = calcOutputDirPath(filepath, args[
+                                              '--exifonly'], os.path.abspath(args['-o']) if args['-o'] else os.path.abspath(args['<source_dir>']))
+            logger.info('output dir name is %s' % targetDirName)
+            try:
+                os.makedirs(targetDirName)
+            except:
+                pass
 
-                    try:
-                        if not args['--move']:
-                            logger.info('coping image from %s to %s' %
-                                        (filepath, targetDirName))
-                            shutil.copy2(filepath, targetDirName)
-                        else:
-                            logger.info('moving image from %s to %s' %
-                                        (filepath, targetDirName))
-                            shutil.move(filepath, targetDirName)
-                    except:
-                        logger.error('failed to copy/move %s' % filepath)
-                        pass
-
-                    break
+            try:
+                if not args['--move']:
+                    logger.info('coping image from %s to %s' %
+                                (filepath, targetDirName))
+                    shutil.copy2(filepath, targetDirName)
+                else:
+                    logger.info('moving image from %s to %s' %
+                                (filepath, targetDirName))
+                    shutil.move(filepath, targetDirName)
+            except:
+                logger.error('failed to copy/move %s' % filepath)
+                pass
 
         # no recurse, just top level dir
         if not args['-r']:

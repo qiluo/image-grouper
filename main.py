@@ -73,7 +73,9 @@ def calcOutputDirPath(imageFilePath, isExifOnly, outputParentDir):
 
     # %Y-%m by default
     dateFormat = '%Y-%m-%d' if args['-f'] == 'day' else '%Y-%m'
-    targetDirName = time.strftime(dateFormat, time.localtime(dt)) if dt else None
+    # if failed to parse date of image, put it to root of outputParentDir, so
+    # here we pass an empty string
+    targetDirName = time.strftime(dateFormat, time.localtime(dt)) if dt else ''
     return os.sep.join([outputParentDir, targetDirName])
 
 if __name__ == '__main__':
